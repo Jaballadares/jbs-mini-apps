@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>JB's Mini Apps</title>
+    <link rel="stylesheet" href="assets/styles.css" />
+  </head>
+  <body>
+    <main class="page">
+      <header class="hero">
+        <p class="eyebrow">jbs-mini-apps</p>
+        <h1>Mini apps</h1>
+        <p class="lede">
+          Small static apps, published from this repo to GitHub Pages.
+        </p>
+      </header>
+
+      <section aria-labelledby="apps-heading">
+        <h2 id="apps-heading" class="sr-only">Apps</h2>
+        <div id="app-list" class="app-grid" data-state="loading">
+          <p class="status">Loading apps…</p>
+        </div>
+      </section>
+    </main>
+
+    <script>
+      const list = document.getElementById("app-list");
+
+      function renderEmpty() {
+        list.dataset.state = "empty";
+        list.innerHTML = `
+          <div class="empty">
+            <h2>No apps yet</h2>
+            <p>Copy <code>apps/_template</code> and add an entry to <code>apps.json</code>.</p>
+          </div>
+        `;
+      }
+
+      function renderError(message) {
+        list.dataset.state = "error";
+        list.innerHTML = `<p class="status">${message}</p>`;
+      }
+
+      function renderApps(apps) {
+        const visible = apps.filter((app) => app.id && !String(app.id).startsWith("_"));
+
+        if (!visible.length) {
+          renderEmpty();
+          return;
+        }
+
+        list.dataset.state = "ready";
+        list.innerHTML = visible
+          .map((app) => {
+            const href = app.path || `apps/${app.id}/`;
+            const description = app.description || "";
+            return `
+              <a class="card" href="${href}">
+                <h2>${app.name || app.id}</h2>
+                ${description ? `<p>${description}</p>` : ""}
+              </a>
+            `;
+          })
+          .join("");
+      }
+
+      fetch("apps.json")
+        .then((response) => {
+          if (!response.ok) throw new Error("Could not load apps.json");
+          return response.json();
+        })
+        .then((data) => renderApps(Array.isArray(data.apps) ? data.apps : []))
+        .catch(() => renderError("Could not load the app list."));
+    </script>
+  </body>
+</html>

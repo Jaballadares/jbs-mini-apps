@@ -1,0 +1,34 @@
+# Disabled example. Copy this file to refresh-data.yml to enable it.
+#
+# This pattern is for scheduled snapshots only.
+# It is not a live API and cannot answer browser requests.
+
+name: Refresh data
+
+on:
+  schedule:
+    - cron: "0 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Write snapshot
+        run: |
+          mkdir -p data
+          printf '{ "updatedAt": "%s" }\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" > data/example.json
+
+      - name: Commit if changed
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/example.json
+          git diff --cached --quiet && echo "No data changes" && exit 0
+          git commit -m "Refresh scheduled data"
+          git push
